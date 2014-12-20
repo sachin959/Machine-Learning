@@ -1,0 +1,82 @@
+---
+title: "Report for Exercise Class"
+author: "Sachin Gautam"
+date: "Saturday, December 20, 2014"
+output: html_document
+---
+Problem Statement :
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+DATA :
+
+The training data for this project are available here: 
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here: 
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+```{r, echo=FALSE}
+library(caret)
+setwd("C:\\users\\sachin\\Desktop\\New Folder")
+pml <- read.csv("pml-training.csv")
+```
+In the first step we need to Partition Training Data into trainSet and Validation Set.
+
+```{r}
+
+set.seed(857)
+inTrain <- createDataPartition(pml$classe, p = 0.8, list = FALSE)
+trainSet <- pml[inTrain, ]
+ValidSet <- pml[-inTrain,] 
+
+```
+Now we have to fit the data into a model for prediction on test Set.
+And then we have to go for cross validation using our Training and validation Set.
+NOw for predicting our model we need to reduce the number of variables so as to avoid overfitting model. We can remove variables which have very small variance 
+(~0).
+Then we fit randomForest model for training data and then go for cross validation.
+ 
+```{r, echo=FALSE}
+source("C:\\users\\sachin\\Desktop\\New Folder\\func.R")
+model <- func(trainSet, ValidSet)
+```
+So the randomForest model is :
+```{r}
+model
+```
+
+The contribution of variable to each exercise class is
+```{r}
+varImp(model)
+```
+
+```{r}
+qplot(predict(model,ValidSet),ValidSet$classe,col=ValidSet$raw_timestamp_part_1)
+```
+As can be seend from the plot most of the predicted values have a raw_time_stamp > 1322900000 and predicted values lies within same range as for original values. 
+Accuracy Achieved for Training Set
+
+```{r}
+print(confusionMatrix(predict(model,trainSet), trainSet$classe))
+```
+
+Accuracy Achieved for Validation Set
+
+
+```{r}
+print(confusionMatrix(predict(model,ValidSet), ValidSet$classe))
+```
+
+Prediction for Test Set
+
+```{r,echo=FALSE}
+testSet <- read.csv("C:\\users\\sachin\\Desktop\\New Folder\\pml-testing.csv");
+```
+```{r}
+print(predict(model,testSet));
+```
